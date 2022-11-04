@@ -508,47 +508,49 @@ public final class SparseItemGrid: ASDisplayNode {
         }
 
         @objc func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            if !self.ignoreScrolling {
-                self.updateVisibleItems(resetScrolling: false, synchronous: .full, restoreScrollPosition: nil)
+            if ignoreScrolling {
+               return
+            }
+            updateVisibleItems(resetScrolling: false, synchronous: .full, restoreScrollPosition: nil)
 
-                if let layout = self.layout, let _ = self.items {
-                    let offset = scrollView.contentOffset.y
-                    let delta = offset - self.previousScrollOffset
-                    self.previousScrollOffset = offset
+            guard let layout = self.layout, let _ = self.items else {
+                return
+            }
+            let offset = scrollView.contentOffset.y
+            let delta = offset - self.previousScrollOffset
+            self.previousScrollOffset = offset
 
-                    if self.isFastScrolling {
-                        if offset <= layout.containerLayout.insets.top {
-                            var coveringInsetOffset = self.coveringInsetOffset + delta
-                            if coveringInsetOffset < 0.0 {
-                                coveringInsetOffset = 0.0
-                            }
-                            if coveringInsetOffset > layout.containerLayout.insets.top {
-                                coveringInsetOffset = layout.containerLayout.insets.top
-                            }
-                            if offset <= 0.0 {
-                                coveringInsetOffset = 0.0
-                            }
-                            if coveringInsetOffset < self.coveringInsetOffset {
-                                self.coveringInsetOffset = coveringInsetOffset
-                                self.coveringOffsetUpdated(self, .immediate)
-                            }
-                        }
-                    } else {
-                        var coveringInsetOffset = self.coveringInsetOffset + delta
-                        if coveringInsetOffset < 0.0 {
-                            coveringInsetOffset = 0.0
-                        }
-                        if coveringInsetOffset > layout.containerLayout.insets.top {
-                            coveringInsetOffset = layout.containerLayout.insets.top
-                        }
-                        if offset <= 0.0 {
-                            coveringInsetOffset = 0.0
-                        }
-                        if coveringInsetOffset != self.coveringInsetOffset {
-                            self.coveringInsetOffset = coveringInsetOffset
-                            self.coveringOffsetUpdated(self, .immediate)
-                        }
+            if self.isFastScrolling {
+                if offset <= layout.containerLayout.insets.top {
+                    var coveringInsetOffset = self.coveringInsetOffset + delta
+                    if coveringInsetOffset < 0.0 {
+                        coveringInsetOffset = 0.0
                     }
+                    if coveringInsetOffset > layout.containerLayout.insets.top {
+                        coveringInsetOffset = layout.containerLayout.insets.top
+                    }
+                    if offset <= 0.0 {
+                        coveringInsetOffset = 0.0
+                    }
+                    if coveringInsetOffset < self.coveringInsetOffset {
+                        self.coveringInsetOffset = coveringInsetOffset
+                        self.coveringOffsetUpdated(self, .immediate)
+                    }
+                }
+            } else {
+                var coveringInsetOffset = self.coveringInsetOffset + delta
+                if coveringInsetOffset < 0.0 {
+                    coveringInsetOffset = 0.0
+                }
+                if coveringInsetOffset > layout.containerLayout.insets.top {
+                    coveringInsetOffset = layout.containerLayout.insets.top
+                }
+                if offset <= 0.0 {
+                    coveringInsetOffset = 0.0
+                }
+                if coveringInsetOffset != self.coveringInsetOffset {
+                    self.coveringInsetOffset = coveringInsetOffset
+                    self.coveringOffsetUpdated(self, .immediate)
                 }
             }
         }
@@ -574,29 +576,30 @@ public final class SparseItemGrid: ASDisplayNode {
         }
 
         private func snapCoveringInsetOffset(animated: Bool) {
-            if let layout = self.layout, let _ = self.items {
-                let offset = self.scrollView.contentOffset.y
-                if offset < layout.containerLayout.insets.top {
-                    if offset <= layout.containerLayout.insets.top / 2.0 {
-                        self.scrollView.setContentOffset(CGPoint(), animated: true)
-                    } else {
-                        self.scrollView.setContentOffset(CGPoint(x: 0.0, y: layout.containerLayout.insets.top), animated: true)
-                    }
+            guard let layout = self.layout, let _ = self.items else {
+                return
+            }
+            let offset = self.scrollView.contentOffset.y
+            if offset < layout.containerLayout.insets.top {
+                if offset <= layout.containerLayout.insets.top / 2.0 {
+                    self.scrollView.setContentOffset(CGPoint(), animated: true)
                 } else {
-                    var coveringInsetOffset = self.coveringInsetOffset
-                    if coveringInsetOffset > layout.containerLayout.insets.top / 2.0 {
-                        coveringInsetOffset = layout.containerLayout.insets.top
-                    } else {
-                        coveringInsetOffset = 0.0
-                    }
-                    if offset <= 0.0 {
-                        coveringInsetOffset = 0.0
-                    }
+                    self.scrollView.setContentOffset(CGPoint(x: 0.0, y: layout.containerLayout.insets.top), animated: true)
+                }
+            } else {
+                var coveringInsetOffset = self.coveringInsetOffset
+                if coveringInsetOffset > layout.containerLayout.insets.top / 2.0 {
+                    coveringInsetOffset = layout.containerLayout.insets.top
+                } else {
+                    coveringInsetOffset = 0.0
+                }
+                if offset <= 0.0 {
+                    coveringInsetOffset = 0.0
+                }
 
-                    if coveringInsetOffset != self.coveringInsetOffset {
-                        self.coveringInsetOffset = coveringInsetOffset
-                        self.coveringOffsetUpdated(self, animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
-                    }
+                if coveringInsetOffset != self.coveringInsetOffset {
+                    self.coveringInsetOffset = coveringInsetOffset
+                    self.coveringOffsetUpdated(self, animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
                 }
             }
         }
